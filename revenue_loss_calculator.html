@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Missed-Call Revenue Loss Calculator | ShezoraAI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F6F8F9;
+    --bg-glow:#EAF3F1;
+    --card:#FFFFFF;
+    --card-border:#E1E7E9;
+    --text:#1B2430;
+    --text-dim:#6B7780;
+    --accent:#E8592B;
+    --accent-dim:#F3C6B4;
+    --mint:#0F8577;
+    --danger-glow:rgba(232,89,43,0.12);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 50% 0%, var(--bg-glow) 0%, var(--bg) 55%);
+    font-family:'Inter',sans-serif;
+    color:var(--text);
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:48px 16px 80px;
+  }
+  .wrap{ width:100%; max-width:560px; }
+
+  .eyebrow{
+    text-align:center;
+    font-size:12px;
+    letter-spacing:0.18em;
+    color:var(--mint);
+    font-weight:600;
+    margin-bottom:10px;
+  }
+  h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:clamp(24px,5vw,32px);
+    line-height:1.25;
+    text-align:center;
+    margin:0 0 8px;
+    font-weight:700;
+  }
+  .sub{
+    text-align:center;
+    color:var(--text-dim);
+    font-size:15px;
+    margin:0 0 32px;
+    line-height:1.5;
+  }
+
+  /* Live meter */
+  .meter{
+    text-align:center;
+    margin-bottom:28px;
+  }
+  .meter-label{
+    font-size:12px;
+    color:var(--text-dim);
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  .meter-value{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:clamp(40px,10vw,56px);
+    font-weight:600;
+    color:var(--accent);
+    text-shadow:0 0 30px var(--danger-glow);
+    letter-spacing:-1px;
+  }
+  .meter-sub{
+    font-size:13px;
+    color:var(--text-dim);
+    margin-top:4px;
+  }
+
+  /* progress dots */
+  .progress{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    margin-bottom:24px;
+  }
+  .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--card-border);
+    transition:background .3s ease, transform .3s ease;
+  }
+  .dot.active{ background:var(--accent); transform:scale(1.25); }
+  .dot.done{ background:var(--mint); }
+
+  /* card */
+  .card{
+    background:var(--card);
+    border:1px solid var(--card-border);
+    border-radius:16px;
+    padding:28px 24px;
+    box-shadow:0 20px 50px rgba(0,0,0,0.35);
+  }
+  .q-label{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:19px;
+    font-weight:600;
+    margin:0 0 6px;
+    line-height:1.4;
+  }
+  .q-hint{
+    font-size:13px;
+    color:var(--text-dim);
+    margin:0 0 20px;
+  }
+
+  input[type="number"]{
+    width:100%;
+    background:#F0F4F5;
+    border:1px solid var(--card-border);
+    color:var(--text);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:22px;
+    padding:14px 16px;
+    border-radius:10px;
+    outline:none;
+    transition:border-color .2s ease, box-shadow .2s ease;
+  }
+  input[type="number"]:focus{
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px rgba(232,89,43,0.25);
+  }
+  input[type="text"]{
+    width:100%;
+    background:#F0F4F5;
+    border:1px solid var(--card-border);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    font-size:16px;
+    padding:13px 16px;
+    border-radius:10px;
+    outline:none;
+    transition:border-color .2s ease, box-shadow .2s ease;
+  }
+  input[type="text"]:focus{
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px rgba(232,89,43,0.25);
+  }
+
+  .slider-row{ margin-top:6px; }
+  input[type="range"]{
+    width:100%;
+    accent-color:var(--accent);
+    height:6px;
+  }
+  .slider-value{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:22px;
+    color:var(--mint);
+    text-align:right;
+    margin-top:6px;
+  }
+
+  .btn-row{
+    display:flex;
+    gap:10px;
+    margin-top:24px;
+  }
+  button{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:15px;
+    border:none;
+    border-radius:10px;
+    padding:14px 20px;
+    cursor:pointer;
+    transition:transform .15s ease, opacity .15s ease, background .2s ease;
+  }
+  button:focus-visible{ outline:2px solid var(--mint); outline-offset:2px; }
+  button:active{ transform:scale(0.98); }
+
+  .btn-primary{
+    flex:1;
+    background:var(--accent);
+    color:#fff;
+  }
+  .btn-primary:hover{ background:#d14e22; }
+  .btn-primary:disabled{ opacity:0.4; cursor:not-allowed; }
+
+  .btn-ghost{
+    background:transparent;
+    color:var(--text-dim);
+    border:1px solid var(--card-border);
+  }
+  .btn-ghost:hover{ color:var(--text); border-color:var(--text-dim); }
+
+  /* results */
+  .result-hero{
+    text-align:center;
+    padding:8px 0 20px;
+  }
+  .result-hero .label{
+    font-size:13px;
+    color:var(--text-dim);
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    margin-bottom:8px;
+  }
+  .result-hero .amount{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:clamp(38px,9vw,52px);
+    font-weight:600;
+    color:var(--accent);
+  }
+  .result-hero .per{
+    font-size:14px;
+    color:var(--text-dim);
+    margin-top:2px;
+  }
+
+  .breakdown{
+    background:#F0F4F5;
+    border:1px solid var(--card-border);
+    border-radius:12px;
+    padding:16px 18px;
+    margin:18px 0 24px;
+  }
+  .breakdown-row{
+    display:flex;
+    justify-content:space-between;
+    font-size:14px;
+    padding:7px 0;
+    border-bottom:1px solid rgba(0,0,0,0.06);
+  }
+  .breakdown-row:last-child{ border-bottom:none; }
+  .breakdown-row .k{ color:var(--text-dim); }
+  .breakdown-row .v{ font-family:'IBM Plex Mono',monospace; color:var(--text); }
+
+  .annual-flag{
+    text-align:center;
+    font-size:13px;
+    color:var(--mint);
+    margin-bottom:20px;
+  }
+  .annual-flag b{ font-family:'IBM Plex Mono',monospace; font-size:15px; }
+
+  .capture-label{
+    font-size:13px;
+    color:var(--text-dim);
+    margin-bottom:8px;
+  }
+  .capture-field{ margin-bottom:12px; }
+
+  .disclaimer{
+    text-align:center;
+    font-size:11.5px;
+    color:var(--text-dim);
+    margin-top:28px;
+    line-height:1.6;
+    opacity:0.8;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ transition:none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow">FREE REVENUE DIAGNOSTIC · sShezoraAI</div>
+  <h1>How Much Is Your Clinic Losing to Missed Calls?</h1>
+  <p class="sub">Answer 4 quick questions. Watch your real number add up as you go.</p>
+
+  <div class="meter">
+    <div class="meter-label">Estimated revenue leak</div>
+    <div class="meter-value" id="meterValue">$0</div>
+    <div class="meter-sub" id="meterSub">per month</div>
+  </div>
+
+  <div class="progress" id="progress"></div>
+
+  <div class="card" id="card"><!-- injected by JS --></div>
+
+  <p class="disclaimer">This is an estimate based on the numbers you enter, using industry-typical booking conversion benchmarks. It's meant to give directional clarity, not an exact audited figure.</p>
+</div>
+
+<script>
+(function(){
+  const state = {
+    step: 0,
+    missedPerDay: null,
+    workingDays: 26,
+    avgValue: null,
+    conversion: 35
+  };
+
+  const steps = [
+    {
+      key: "missedPerDay",
+      label: "On an average day, how many calls does your front desk miss?",
+      hint: "Check your phone system or CRM call log — even a rough estimate works.",
+      type: "number",
+      placeholder: "e.g. 12",
+      min: 0
+    },
+    {
+      key: "workingDays",
+      label: "How many days a month is your clinic open?",
+      hint: "Most clinics run 22–26 working days a month.",
+      type: "number",
+      placeholder: "e.g. 26",
+      min: 1
+    },
+    {
+      key: "avgValue",
+      label: "What's the average value of a new patient visit?",
+      hint: "Use your typical first-visit revenue, in dollars.",
+      type: "number",
+      placeholder: "e.g. 250",
+      min: 0
+    },
+    {
+      key: "conversion",
+      label: "Of the calls that get answered, what percent usually turn into a booked appointment?",
+      hint: "Not sure? 35% is a reasonable industry benchmark to start with.",
+      type: "slider",
+      min: 15,
+      max: 60
+    }
+  ];
+
+  const cardEl = document.getElementById("card");
+  const progressEl = document.getElementById("progress");
+  const meterValueEl = document.getElementById("meterValue");
+  const meterSubEl = document.getElementById("meterSub");
+
+  function fmtMoney(n){
+    n = Math.max(0, Math.round(n));
+    return "$" + n.toLocaleString("en-US");
+  }
+
+  function currentEstimate(){
+    const missed = state.missedPerDay ?? 10;
+    const days = state.workingDays ?? 26;
+    const value = state.avgValue ?? 200;
+    const conv = (state.conversion ?? 35) / 100;
+    return missed * days * value * conv;
+  }
+
+  function animateMeter(target){
+    const el = meterValueEl;
+    const start = parseFloat((el.dataset.raw || "0"));
+    const dur = 500;
+    const t0 = performance.now();
+    function tick(now){
+      const p = Math.min(1, (now - t0) / dur);
+      const eased = 1 - Math.pow(1 - p, 3);
+      const val = start + (target - start) * eased;
+      el.textContent = fmtMoney(val);
+      if(p < 1){ requestAnimationFrame(tick); } else { el.dataset.raw = target; }
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function renderProgress(){
+    progressEl.innerHTML = "";
+    for(let i=0;i<steps.length;i++){
+      const d = document.createElement("div");
+      d.className = "dot" + (i === state.step ? " active" : (i < state.step ? " done" : ""));
+      progressEl.appendChild(d);
+    }
+  }
+
+  function renderStep(){
+    if(state.step < steps.length){
+      meterSubEl.textContent = "per month · updates as you answer";
+      renderProgress();
+      const s = steps[state.step];
+      let inputHtml = "";
+      const hasValidValue = s.type === "number" && typeof state[s.key] === "number" && state[s.key] >= 0;
+      if(s.type === "number"){
+        inputHtml = `<input type="number" id="inputField" placeholder="${s.placeholder}" min="${s.min}" value="${state[s.key] ?? ''}" inputmode="numeric" />`;
+      } else if(s.type === "slider"){
+        const v = state[s.key];
+        inputHtml = `
+          <div class="slider-row">
+            <input type="range" id="inputField" min="${s.min}" max="${s.max}" value="${v}" />
+            <div class="slider-value" id="sliderVal">${v}%</div>
+          </div>`;
+      }
+      cardEl.innerHTML = `
+        <div class="q-label">${s.label}</div>
+        <div class="q-hint">${s.hint}</div>
+        ${inputHtml}
+        <div class="btn-row">
+          ${state.step > 0 ? `<button class="btn-ghost" id="backBtn">Back</button>` : ``}
+          <button class="btn-primary" id="nextBtn" ${(s.type==='number' && !hasValidValue) ? 'disabled' : ''}>${state.step === steps.length - 1 ? "See My Result" : "Next"}</button>
+        </div>
+      `;
+      const input = document.getElementById("inputField");
+      const nextBtn = document.getElementById("nextBtn");
+
+      if(s.type === "number"){
+        input.addEventListener("input", () => {
+          const val = parseFloat(input.value);
+          state[s.key] = isNaN(val) ? null : val;
+          nextBtn.disabled = input.value === "" || isNaN(val) || val < 0;
+          animateMeter(currentEstimate());
+        });
+        setTimeout(() => input.focus(), 50);
+      } else if(s.type === "slider"){
+        const sliderVal = document.getElementById("sliderVal");
+        input.addEventListener("input", () => {
+          state[s.key] = parseFloat(input.value);
+          sliderVal.textContent = state[s.key] + "%";
+          animateMeter(currentEstimate());
+        });
+      }
+
+      nextBtn.addEventListener("click", () => {
+        if(state.step === steps.length - 1){
+          state.step++;
+          renderResult();
+        } else {
+          state.step++;
+          renderStep();
+        }
+      });
+      const backBtn = document.getElementById("backBtn");
+      if(backBtn){
+        backBtn.addEventListener("click", () => {
+          state.step--;
+          renderStep();
+        });
+      }
+      animateMeter(currentEstimate());
+    }
+  }
+
+  function renderResult(){
+    progressEl.innerHTML = "";
+    meterSubEl.textContent = "your final estimate";
+    const monthly = currentEstimate();
+    const annual = monthly * 12;
+    const totalMissed = Math.round((state.missedPerDay ?? 0) * (state.workingDays ?? 26));
+    animateMeter(monthly);
+
+    cardEl.innerHTML = `
+      <div class="result-hero">
+        <div class="label">Estimated monthly revenue leak</div>
+        <div class="amount">${fmtMoney(monthly)}</div>
+        <div class="per">based on what you entered</div>
+      </div>
+
+      <div class="breakdown">
+        <div class="breakdown-row"><span class="k">Missed calls / month</span><span class="v">${totalMissed}</span></div>
+        <div class="breakdown-row"><span class="k">Avg. new patient value</span><span class="v">${fmtMoney(state.avgValue ?? 0)}</span></div>
+        <div class="breakdown-row"><span class="k">Booking conversion used</span><span class="v">${state.conversion}%</span></div>
+      </div>
+
+      <div class="annual-flag">That's roughly <b>${fmtMoney(annual)}</b> a year, if nothing changes.</div>
+
+      <div class="btn-row">
+        <button class="btn-primary" id="restartBtn" style="flex:1;">Start Over</button>
+      </div>
+    `;
+
+    document.getElementById("restartBtn").addEventListener("click", () => {
+      state.step = 0;
+      renderStep();
+    });
+  }
+
+  renderStep();
+})();
+</script>
+</body>
+</html>
